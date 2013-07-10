@@ -28,6 +28,7 @@ public class SpaceDockUI {
 	public ShipSave[] myShips;
 	public JButton[] buttonList;
 	public ShipSave currentShip;
+	public File currentFile;
 	
 	//currentShip getter and setter
 	public void setCurrentShip( ShipSave ss1) {
@@ -65,6 +66,9 @@ public class SpaceDockUI {
 		//initializ - get ships/file to display
 		myShips = ShipSaveParser.getShipsList();
 		buttonList = new JButton[myShips.length];
+		File currentFile = 
+   				new File(myShips[0].getshipFilePath().getParentFile() + "\\continue.sav");
+		currentShip = ShipSaveParser.findCurrentShip(myShips, currentFile);
 		frmSpaceDock = new JFrame();
 		frmSpaceDock.setTitle("Space Dock");
 		frmSpaceDock.setBounds(100, 100, 450, 300);
@@ -90,8 +94,6 @@ public class SpaceDockUI {
 //		frmSpaceDock.getContentPane().add(lblShipID);
 		
 		//add the board / dock button
-		File currentFile = 
-				new File(myShips[i].getshipFilePath().getParentFile() + "\\continue.sav");
 		if (myShips[i].getshipFilePath().equals(currentFile)) {
 			buttonList[i] =  new JButton("Dock");		
 		}
@@ -101,8 +103,7 @@ public class SpaceDockUI {
 		//add to a button array so we can use the index to match the button to the ship		
 		frmSpaceDock.getContentPane().add(buttonList[i]);
 		buttonList[i].addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {
-				
+			public void actionPerformed(ActionEvent ae) {				
 				//connect the button to the proper ship (there must be a better way to do this!)
 				//Well, this is much better than the old for loop, anyway
 				JButton sourceButton = (JButton) ae.getSource();
@@ -111,18 +112,18 @@ public class SpaceDockUI {
 				if (sourceButton.getText().equals("Dock")) {
 		    	   sourceButton.setText("Board");	    	   
 		    	   parser.dockShip(myShips[i]);
+		    	   currentShip = myShips[i];
 		    	   
 				} else if (sourceButton.getText().equals("Board")) {
 		    	   sourceButton.setText("Dock");
-		          //TODO if they have boarded a ship, dock it before boarding new one
-		    	   File currentFile = 
-		   				new File(myShips[i].getshipFilePath().getParentFile() + "\\continue.sav");
-		    	   if  (currentFile.exists()) {
+		          //TODO if they have boarded a ship, dock it before boarding new one;
+		    	   if  (currentShip != null) {
 		    		   //Find which ship has the file, dock it, and then update it's button
-		    		   parser.dockShip(myShips[i]);
+		    		   parser.dockShip(currentShip);
+		    		   currentShip = null;
 		    	   }  
 		    	   parser.boardShip(myShips[i]);
-		    	   
+		    	   currentShip = myShips[i];
 			       
 				}
 			}

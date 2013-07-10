@@ -13,6 +13,8 @@ import java.nio.file.Path;
 
 import javax.swing.JButton;
 
+import org.iceburg.ftl.spacedock.ShipSaveParser.ShipSave;
+
 //import org.apache.logging.log4j.Logger;
 //import org.apache.logging.log4j.LogManager;
 
@@ -111,12 +113,6 @@ public class ShipSaveParser extends Parser{
 		for (int i = 0; i < shipList.length; i++) {			
 			ShipSaveParser.ShipSave ss1 = parser.readShipSave(fileList[i]);
 			shipList[i] = ss1;
-			//TODO double check that this worked
-			File currentFile = 
-					new File(fileList[i].getParentFile() + "\\continue.sav");
-			if (fileList[i].equals(currentFile)) {
-				//add to UI's current ship
-			}
 		}
 		return shipList;
 	}
@@ -194,6 +190,19 @@ public class ShipSaveParser extends Parser{
 //			shipButton = button;
 //		}
 //		public JButton getShipButton() { return shipButton; }
+	}
+
+
+	//TODO Test
+	public static ShipSave findCurrentShip(ShipSave[] myShips, File currentFile) {
+		for (int i = 0; i < myShips.length; i++) {			
+			if (myShips[i].getshipFilePath().equals(currentFile)) {
+				//add to UI's current ship
+				return myShips[i];
+			}
+			
+		}
+		return null;
 	}
 	
 }
