@@ -1,6 +1,8 @@
 package org.iceburg.ftl.spacedock;
 
 import java.awt.EventQueue;
+
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -15,19 +17,28 @@ import net.blerf.ftl.xml.ShipBlueprint;
 import org.iceburg.ftl.spacedock.ShipSaveParser.ShipSave;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Properties;
 
 import javax.swing.JLabel;
 import javax.swing.filechooser.FileFilter;
 import javax.xml.bind.JAXBException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 //Credit to by Vhati and ComaToes for their FTLEditor and allowing me to use their source
 //FTL Editor found here: http://www.ftlgame.com/forum/viewtopic.php?f=7&t=10959&start=70
@@ -35,7 +46,7 @@ import javax.xml.bind.JAXBException;
 
 public class SpaceDockUI {
 
-
+	private static final Logger log = LogManager.getLogger(SpaceDockUI.class);
 	private JFrame frmSpaceDock;
 	public ShipSave[] myShips;
 	public JButton[] buttonList;
@@ -56,36 +67,37 @@ public class SpaceDockUI {
 		File datsPath = null;
 		boolean writeConfig = false;
 		Properties config = new Properties();
+		//TODO private HashMap<String,BufferedImage> imageCache = new HashMap<String,BufferedImage>;
 
 		// Read the config file.
 		InputStream in = null;
 		try {
 			if ( propFile.exists() ) {
-				//log.trace( "Loading properties from config file." );
+				log.trace( "Loading properties from config file." );
 				in = new FileInputStream(propFile);
 				config.load( in );
 			} else {
 				writeConfig = true; // Create a new cfg, but only if necessary.
 			}
 		} catch (IOException e) {
-			//log.error( "Error loading config.", e );
+			log.error( "Error loading config.", e );
 			showErrorDialog( "Error loading config from " + propFile.getPath() );
 		} finally {
 			if ( in != null ) { try { in.close(); } catch (IOException e) {} }
 		}
 		
-		//TODO FTL Resources Path.
+		//FTL Resources Path.
 		String datsPathString = config.getProperty("ftlDatsPath");
 
 		if ( datsPathString != null ) {
-			//log.info( "Using FTL dats path from config: " + datsPathString );
+			log.info( "Using FTL dats path from config: " + datsPathString );
 			datsPath = new File(datsPathString);
 			if ( isDatsPathValid(datsPath) == false ) {
-				//log.error( "The config's ftlDatsPath does not exist, or it lacks data.dat." );
+				log.error( "The config's ftlDatsPath does not exist, or it lacks data.dat." );
 				datsPath = null;
 			}
 		} else {
-			//log.trace( "No FTL dats path previously set." );
+			log.trace( "No FTL dats path previously set." );
 		}
 		
 
@@ -98,20 +110,43 @@ public class SpaceDockUI {
 			}
 
 			if ( datsPath == null ) {
-				//log.debug("FTL dats path was not located automatically. Prompting user for location.");
+				log.debug("FTL dats path was not located automatically. Prompting user for location.");
 				datsPath = promptForFtlPath();
 			}
 
 			if ( datsPath != null ) {
 				config.setProperty( "ftlDatsPath", datsPath.getAbsolutePath() );
 				writeConfig = true;
-				//log.info( "FTL dats located at: " + datsPath.getAbsolutePath() );
+				log.info( "FTL dats located at: " + datsPath.getAbsolutePath() );
 			}
 		}
 
 		if ( datsPath == null ) {
 			showErrorDialog( "FTL data was not found.\nFTL Profile Editor will now exit." );
-			//log.debug( "No FTL dats path found, exiting." );
+			log.debug( "No FTL dats path found, exiting." );
+			System.exit(1);
+		}
+		OutputStream out = null;
+		if ( writeConfig ) {
+			try {
+				out = new FileOutputStream(propFile);
+				config.store( out, "FTL Profile Editor - Config File" );
+
+			} catch (IOException e) {
+				log.error( "Error saving config to " + propFile.getPath(), e );
+				showErrorDialog( "Error saving config to " + propFile.getPath() );
+
+			} finally {
+				if ( out != null ) { try { out.close(); } catch (IOException e) {} }
+			}
+		}
+
+		try {
+			DataManager.init( datsPath ); // Parse the dats.
+		}
+		catch (Exception e) {
+		//	log.error( "Error parsing FTL data files.", e );
+			showErrorDialog( "Error parsing FTL data files." );
 			System.exit(1);
 		}
 		
@@ -128,13 +163,15 @@ public class SpaceDockUI {
 		try {
 			DataManager.init(datsPath);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			// Auto-generated catch block
 			e.printStackTrace();
 		} catch (JAXBException e) {
-			// TODO Auto-generated catch block
+			// Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+	
+	
 
 	/**
 	 * Create the application.
@@ -159,11 +196,10 @@ public class SpaceDockUI {
 		frmSpaceDock.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmSpaceDock.getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
 		
-		
+		ImageIO.setUseCache(false);  // Small images don't need extra buffering.
 		
 		for (int i = 0; i < myShips.length; i++) {			
 		//create panel/ basic data
-		String panelName = ("shipPanel" + i);
 		JPanel loopPanel = new JPanel();
 		frmSpaceDock.getContentPane().add(loopPanel);
 		JLabel lblShipName = new JLabel(myShips[i].getPlayerShipName());
@@ -173,17 +209,16 @@ public class SpaceDockUI {
 		
 		//add the ship's miniship picture
 		
-//		ShipBlueprint ship = DataManager.get().getShips()
-//				.get(myShips[i].getPlayerShipBlueprintId());
-//		ImageIcon shipPic = new ImageIcon("img/ship/" + ship.getGraphicsBaseName() + "_base.png");
-//		JLabel lblShipID = new JLabel("", shipPic, JLabel.CENTER);
-//		frmSpaceDock.getContentPane().add(lblShipID);
-		
-		for ( ShipBlueprint ship : DataManager.get().getPlayerShips() ) {
-			ImageIcon shipPic = new ImageIcon("img/ship/" + ship.getGraphicsBaseName() + "_base.png");
-			JLabel lblShipID = new JLabel("", shipPic, JLabel.CENTER);
-			frmSpaceDock.getContentPane().add(lblShipID);
-		}
+		ShipBlueprint ship = DataManager.get().getShips()
+				.get(myShips[i].getPlayerShipBlueprintId());
+		BufferedImage baseImage;
+		//baseImage = getResourceImage("img/customizeUI/miniship_"+ ship.getGraphicsBaseName()+ ".png");
+		//TODO - ^will crash if no miniship, for instance on enemy ships. Therefore custom ships must have miniship to work with this program. 
+		//So let's use base image until I can test if miniship exists.
+		baseImage = getResourceImage("img/ship/"+ ship.getGraphicsBaseName() +"_base.png");
+		JLabel lblShipID = new JLabel("", new ImageIcon(baseImage), JLabel.LEFT);
+		lblShipID.setMinimumSize(new Dimension(191, 121));
+		frmSpaceDock.getContentPane().add(lblShipID);
 		
 		//add the board / dock button
 		if (myShips[i].getshipFilePath().equals(currentFile)) {
@@ -194,39 +229,41 @@ public class SpaceDockUI {
 		}
 		//add to a button array so we can use the index to match the button to the ship		
 		frmSpaceDock.getContentPane().add(buttonList[i]);
-		buttonList[i].addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {				
-				//connect the button to the proper ship (there must be a better way to do this!)
-				//Well, this is much better than the old for loop, anyway
-				JButton sourceButton = (JButton) ae.getSource();
-				int i = Arrays.asList(buttonList).indexOf(sourceButton);
-				ShipSaveParser parser = new ShipSaveParser();
-				if (sourceButton.getText().equals("Dock")) {
-		    	   sourceButton.setText("Board");	    	   
-		    	   parser.dockShip(myShips[i]);
-		    	   currentShip = myShips[i];
-		    	   
-				} else if (sourceButton.getText().equals("Board")) {
-		    	   sourceButton.setText("Dock");
-		          //TODO if they have boarded a ship, dock it before boarding new one;
-		    	   if  (currentShip != null) {
-		    		   //Find which ship has the file, dock it, and then update it's button
-		    		   parser.dockShip(currentShip);
-		    		   currentShip = null;
-		    	   }  
-		    	   parser.boardShip(myShips[i]);
-		    	   currentShip = myShips[i];
-			       
-				}
-			}
-		});
+		buttonList[i].addActionListener(new BoardListener());
 		
 		
 		}
 		
-		
-	//some functions ripped straight from FTLProfileEditor because they were private	
 	}
+	
+	class BoardListener implements ActionListener {
+		public void actionPerformed(ActionEvent ae) {				
+			//connect the button to the proper ship (there must be a better way to do this!)
+			//Well, this is much better than the old for loop, anyway
+			JButton sourceButton = (JButton) ae.getSource();
+			int i = Arrays.asList(buttonList).indexOf(sourceButton);
+			ShipSaveParser parser = new ShipSaveParser();
+			if (sourceButton.getText().equals("Dock")) {
+	    	   sourceButton.setText("Board");	    	   
+	    	   parser.dockShip(myShips[i]);
+	    	   currentShip = myShips[i];
+	    	   
+			} else if (sourceButton.getText().equals("Board")) {
+	    	   sourceButton.setText("Dock");
+	          //if they have boarded a ship, dock it before boarding new one;
+	    	   if  (currentShip != null) {
+	    		   //Find which ship has the file, dock it, and then update it's button
+	    		   parser.dockShip(currentShip);
+	    		   currentShip = null;
+	    	   }  
+	    	   parser.boardShip(myShips[i]);
+	    	   currentShip = myShips[i];
+		       
+			}
+		}
+	}
+	
+	//some functions ripped straight from FTLProfileEditor because they were private
 	private static void showErrorDialog( String message ) {
 		JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
 	}
@@ -267,9 +304,9 @@ public class SpaceDockUI {
 				if( contentsPath.exists() && contentsPath.isDirectory() && new File(contentsPath, "Resources").exists() )
 					ftlPath = new File(contentsPath, "Resources");
 			}
-			//log.trace( "User selected: " + ftlPath.getAbsolutePath() );
+			log.trace( "User selected: " + ftlPath.getAbsolutePath() );
 		} else {
-			//log.trace( "User cancelled FTL dats path selection." );
+			log.trace( "User cancelled FTL dats path selection." );
 		}
 
 		if ( ftlPath != null && isDatsPathValid(ftlPath) ) {
@@ -312,5 +349,42 @@ public class SpaceDockUI {
 
 		return ftlPath;
 	}
+	
+	private BufferedImage getResourceImage(String innerPath) {
+		  // If caching, you can get(innerPath) from a HashMap and return the pre-loaded pic.
+		  InputStream in = null;
+		  BufferedImage result = null;
+		  BufferedImage scaledBI = null;
+		  try {
+		    in = DataManager.get().getResourceInputStream(innerPath);
+		    result = ImageIO.read(in);
+		    if (result.getWidth() > 200) {
+		    	int scaledWidth = 0;
+		    	int scaledHeight = 0;
+		    	if (result.getWidth() > result.getHeight()){
+		    		scaledWidth = 191;
+		    		scaledHeight = ((result.getWidth()/191)*result.getHeight());
+		    	}
+		    	else {
+		    		scaledHeight = 121;
+		    		scaledWidth = ((result.getHeight()/121)*result.getWidth());
+		    	}
+		    	scaledBI = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.SCALE_REPLICATE);
+		    	Graphics2D g = scaledBI.createGraphics();
+		    	g.drawImage(result, 0, 0, scaledWidth, scaledHeight, null); 
+		    	g.dispose();
+		    }
+		    
+		    return scaledBI;  // If caching, put result in the map before returning.
+		  }
+		  catch (IOException e) {
+		    log.error( "Failed to load resource image ("+ innerPath +")", e );
+		  }
+		  finally {
+		    try {if (in != null) in.close();}
+		    catch (IOException f) {}
+		  }
+		  return result;
+		}
 
 }
