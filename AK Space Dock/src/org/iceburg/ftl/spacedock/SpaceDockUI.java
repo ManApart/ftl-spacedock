@@ -3,6 +3,8 @@ package org.iceburg.ftl.spacedock;
 import java.awt.EventQueue;
 
 import javax.imageio.ImageIO;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -17,6 +19,7 @@ import net.blerf.ftl.xml.ShipBlueprint;
 import org.iceburg.ftl.spacedock.ShipSaveParser.ShipSave;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -194,18 +197,19 @@ public class SpaceDockUI {
 		frmSpaceDock.setTitle("Space Dock");
 		frmSpaceDock.setBounds(100, 100, 450, 300);
 		frmSpaceDock.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmSpaceDock.getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
+		frmSpaceDock.setLayout(new GridLayout(0, 2, 0, 0));
 		
 		ImageIO.setUseCache(false);  // Small images don't need extra buffering.
 		
 		for (int i = 0; i < myShips.length; i++) {			
 		//create panel/ basic data
 		JPanel loopPanel = new JPanel();
-		frmSpaceDock.getContentPane().add(loopPanel);
+		loopPanel.setLayout(new BoxLayout(loopPanel, BoxLayout.Y_AXIS));
+		loopPanel.setBackground(Color.gray);
 		JLabel lblShipName = new JLabel(myShips[i].getPlayerShipName());
-		frmSpaceDock.getContentPane().add(lblShipName);
+		loopPanel.add(lblShipName);
 		JLabel lblExplored = new JLabel(myShips[i].getTotalBeaconsExplored() + " beacons explored.");
-		frmSpaceDock.getContentPane().add(lblExplored);
+		loopPanel.add(lblExplored);
 		
 		//add the ship's miniship picture
 		
@@ -216,9 +220,9 @@ public class SpaceDockUI {
 		//TODO - ^will crash if no miniship, for instance on enemy ships. Therefore custom ships must have miniship to work with this program. 
 		//So let's use base image until I can test if miniship exists.
 		baseImage = getResourceImage("img/ship/"+ ship.getGraphicsBaseName() +"_base.png");
-		JLabel lblShipID = new JLabel("", new ImageIcon(baseImage), JLabel.LEFT);
-		lblShipID.setMinimumSize(new Dimension(191, 121));
-		frmSpaceDock.getContentPane().add(lblShipID);
+		JLabel lblShipID = new JLabel("", new ImageIcon(baseImage), JLabel.CENTER);
+		//lblShipID.setPreferredSize(new Dimension(200, 140));
+		loopPanel.add(lblShipID);
 		
 		//add the board / dock button
 		if (myShips[i].getshipFilePath().equals(currentFile)) {
@@ -228,12 +232,13 @@ public class SpaceDockUI {
 			buttonList[i] =  new JButton("Board");
 		}
 		//add to a button array so we can use the index to match the button to the ship		
-		frmSpaceDock.getContentPane().add(buttonList[i]);
+		loopPanel.add(buttonList[i]);
 		buttonList[i].addActionListener(new BoardListener());
 		
-		
+		frmSpaceDock.add(loopPanel);
+		loopPanel.add(Box.createRigidArea(new Dimension(25, 10)));
 		}
-		
+		frmSpaceDock.pack();
 	}
 	
 	class BoardListener implements ActionListener {
@@ -363,16 +368,19 @@ public class SpaceDockUI {
 		    	int scaledHeight = 0;
 		    	if (result.getWidth() > result.getHeight()){
 		    		scaledWidth = 191;
-		    		scaledHeight = ((result.getWidth()/191)*result.getHeight());
+		    		scaledHeight = (result.getHeight()/(result.getWidth()/191));
 		    	}
 		    	else {
 		    		scaledHeight = 121;
-		    		scaledWidth = ((result.getHeight()/121)*result.getWidth());
+		    		scaledWidth = (result.getWidth()/(result.getHeight()/121));
 		    	}
-		    	scaledBI = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.SCALE_REPLICATE);
+		    	scaledBI = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TRANSLUCENT);
 		    	Graphics2D g = scaledBI.createGraphics();
 		    	g.drawImage(result, 0, 0, scaledWidth, scaledHeight, null); 
 		    	g.dispose();
+		    }
+		    else {
+		    	return result;
 		    }
 		    
 		    return scaledBI;  // If caching, put result in the map before returning.

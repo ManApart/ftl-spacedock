@@ -86,12 +86,7 @@ public class SpaceDockUITestGUI {
 		frmSpaceDock.getContentPane().add(lblShipName);
 		JLabel lblExplored = new JLabel(myShips[i].getTotalBeaconsExplored() + " beacons explored.");
 		frmSpaceDock.getContentPane().add(lblExplored);
-		//TODO - replace blueprint ID with appropriate picture
-		//JLabel lblShipID = new JLabel(myShips[i].getPlayerShipBlueprintId());
-//		ShipBlueprint ship = DataManager.get().getShips().get(myShips[i].getPlayerShipBlueprintId());
-//		ImageIcon shipPic = new ImageIcon("img/ship/" + ship.getGraphicsBaseName() + "_base.png");
-//		JLabel lblShipID = new JLabel("", shipPic, JLabel.CENTER);
-//		frmSpaceDock.getContentPane().add(lblShipID);
+
 		System.out.println(myShips[i].getshipFilePath());
 		File currentFile = 
 				new File(myShips[i].getshipFilePath().getParentFile() + "\\continue.sav");
@@ -107,36 +102,8 @@ public class SpaceDockUITestGUI {
 		
 		
 				
-//		for ( ShipBlueprint ship : DataManager.get().getPlayerShips() ) {
-//			IconCycleButton shipBox = frmSpaceDock.createCycleButton( "img/ship/" + ship.getGraphicsBaseName() + "_base.png", false );
-//			shipBox.setText( ship.getShipClass() );
-			//shipBoxes.add(shipBox);
-			//shipPanel.add(shipBox);
-		//}
 		
 	}
 
 }
 
-
-//
-//if (myShips[i].getshipFilePath().equals(currentFile)) {
-//	btnDock = new JButton("Dock");
-//	frmSpaceDock.getContentPane().add(btnDock);
-//	btnDock.addActionListener(new ActionListener() {
-//		public void actionPerformed(ActionEvent e) {
-//			boardButtonPress(true, btnDock);
-//			System.out.println("Dock pressed");
-//		}
-//	});
-//}
-//else {
-//	btnDock = new JButton("Board");
-//	frmSpaceDock.getContentPane().add(btnDock);
-//	btnDock.addActionListener(new ActionListener() {
-//		public void actionPerformed(ActionEvent e) {
-//			boardButtonPress(false, btnDock);
-//			System.out.println("Board pressed");
-//		}
-//	});
-//}
