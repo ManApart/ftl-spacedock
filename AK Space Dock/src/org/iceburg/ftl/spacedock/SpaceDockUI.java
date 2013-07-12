@@ -10,6 +10,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
 
 import net.blerf.ftl.parser.DataManager;
@@ -46,6 +47,13 @@ import org.apache.logging.log4j.Logger;
 //Credit to by Vhati and ComaToes for their FTLEditor and allowing me to use their source
 //FTL Editor found here: http://www.ftlgame.com/forum/viewtopic.php?f=7&t=10959&start=70
 //In order to get pics of each ship, I borrowed a lot of their code in order to interact with their datamanager
+
+//TODO outline:
+//Better understand buffers/caches and implement them
+//clean up code/ organize it better
+//Set background, pack image and make sure works as jar
+//test as jar
+//upload
 
 public class SpaceDockUI {
 
@@ -197,15 +205,17 @@ public class SpaceDockUI {
 		frmSpaceDock.setTitle("Space Dock");
 		frmSpaceDock.setBounds(100, 100, 450, 300);
 		frmSpaceDock.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmSpaceDock.setLayout(new GridLayout(0, 2, 0, 0));
-		
+		frmSpaceDock.setLayout(new GridLayout(0, 1, 0, 0));
+		JPanel mainPanel = new JPanel();
+		mainPanel.setLayout(new GridLayout(0, 2, 0, 0));
+				
 		ImageIO.setUseCache(false);  // Small images don't need extra buffering.
 		
 		for (int i = 0; i < myShips.length; i++) {			
 		//create panel/ basic data
 		JPanel loopPanel = new JPanel();
 		loopPanel.setLayout(new BoxLayout(loopPanel, BoxLayout.Y_AXIS));
-		loopPanel.setBackground(Color.gray);
+		//loopPanel.setBackground(Color.gray);
 		JLabel lblShipName = new JLabel(myShips[i].getPlayerShipName());
 		loopPanel.add(lblShipName);
 		JLabel lblExplored = new JLabel(myShips[i].getTotalBeaconsExplored() + " beacons explored.");
@@ -235,10 +245,17 @@ public class SpaceDockUI {
 		loopPanel.add(buttonList[i]);
 		buttonList[i].addActionListener(new BoardListener());
 		
-		frmSpaceDock.add(loopPanel);
+		
+		
 		loopPanel.add(Box.createRigidArea(new Dimension(25, 10)));
+		//frmSpaceDock.add(loopPanel);
+		mainPanel.add(loopPanel);
 		}
-		frmSpaceDock.pack();
+		JScrollPane scrollPanel = new JScrollPane(mainPanel);
+		scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		frmSpaceDock.add(scrollPanel);
+		//frmSpaceDock.pack();
 	}
 	
 	class BoardListener implements ActionListener {
@@ -255,10 +272,13 @@ public class SpaceDockUI {
 	    	   
 			} else if (sourceButton.getText().equals("Board")) {
 	    	   sourceButton.setText("Dock");
-	          //if they have boarded a ship, dock it before boarding new one;
+	          //if they have boarded a ship, dock it before boarding new one; 
 	    	   if  (currentShip != null) {
-	    		   //Find which ship has the file, dock it, and then update it's button
+	    		   //TODO Find which ship has the file, dock it, and then update it's button
+	    		  // System.out.println("Already manning a ship!");
 	    		   parser.dockShip(currentShip);
+	    		   int b = Arrays.asList(myShips).indexOf(currentShip);
+	    		   buttonList[b].setText("Board");
 	    		   currentShip = null;
 	    	   }  
 	    	   parser.boardShip(myShips[i]);
