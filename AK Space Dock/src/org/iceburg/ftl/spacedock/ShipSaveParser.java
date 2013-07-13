@@ -11,10 +11,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import javax.swing.JButton;
-
-import org.iceburg.ftl.spacedock.ShipSaveParser.ShipSave;
-
 //import org.apache.logging.log4j.Logger;
 //import org.apache.logging.log4j.LogManager;
 

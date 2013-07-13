@@ -11,10 +11,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
-import javax.swing.JToggleButton;
 
 import net.blerf.ftl.parser.DataManager;
-import net.blerf.ftl.ui.IconCycleButton;
 import net.blerf.ftl.xml.ShipBlueprint;
 
 import org.iceburg.ftl.spacedock.ShipSaveParser.ShipSave;
@@ -50,11 +48,11 @@ import org.apache.logging.log4j.Logger;
 //Credit to by Vhati and ComaToes for their FTLEditor and allowing me to use their source
 //FTL Editor found here: http://www.ftlgame.com/forum/viewtopic.php?f=7&t=10959&start=70
 //In order to get pics of each ship, I borrowed a lot of their code in order to interact with their datamanager
+//I made the custom background from FTL resources and a modified space dock based on schematics from: http://www.shipschematics.net/
 
 //TODO outline:
 //clean up code/ organize it better
-//Set background, pack image and make sure works as jar
-//multiple columns based on program width
+//pack image and make sure works as jar
 //test as jar
 //upload
 
@@ -96,8 +94,9 @@ public class SpaceDockUI {
 		} catch (IOException e) {
 			log.error( "Error loading config.", e );
 			showErrorDialog( "Error loading config from " + propFile.getPath() );
+			e.printStackTrace();
 		} finally {
-			if ( in != null ) { try { in.close(); } catch (IOException e) {} }
+			if ( in != null ) { try { in.close(); } catch (IOException e) {e.printStackTrace();} }
 		}
 		
 		//FTL Resources Path.
@@ -149,9 +148,9 @@ public class SpaceDockUI {
 			} catch (IOException e) {
 				log.error( "Error saving config to " + propFile.getPath(), e );
 				showErrorDialog( "Error saving config to " + propFile.getPath() );
-
+				e.printStackTrace();
 			} finally {
-				if ( out != null ) { try { out.close(); } catch (IOException e) {} }
+				if ( out != null ) { try { out.close(); } catch (IOException e) {e.printStackTrace();} }
 			}
 		}
 
@@ -162,6 +161,7 @@ public class SpaceDockUI {
 		//	log.error( "Error parsing FTL data files.", e );
 			showErrorDialog( "Error parsing FTL data files." );
 			System.exit(1);
+			e.printStackTrace();
 		}
 		
 		EventQueue.invokeLater(new Runnable() {
@@ -206,8 +206,8 @@ public class SpaceDockUI {
 		currentShip = ShipSaveParser.findCurrentShip(myShips, currentFile);
 		imageCache = new HashMap<String, BufferedImage>();
 		frmSpaceDock = new JFrame();
-		frmSpaceDock.setTitle("Space Dock");
-		frmSpaceDock.setBounds(100, 100, 800, 600);
+		frmSpaceDock.setTitle("FTL Space Dock");
+		frmSpaceDock.setBounds(100, 100, 850, 600);
 		frmSpaceDock.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmSpaceDock.setLayout(new GridLayout(0, 1, 0, 0));
 		BgPanel bgPanel = new BgPanel();
@@ -420,10 +420,11 @@ public class SpaceDockUI {
 			  }
 			  catch (IOException e) {
 			    log.error( "Failed to load resource image ("+ innerPath +")", e );
+			    e.printStackTrace();
 			  }
 			  finally {
 			    try {if (in != null) in.close();}
-			    catch (IOException f) {}
+			    catch (IOException e) {e.printStackTrace();}
 			  }
 			  return result;
 		}
@@ -453,9 +454,25 @@ public class SpaceDockUI {
 		    }
 	}
 	class BgPanel extends JPanel {
-		Image bg = Toolkit.getDefaultToolkit().createImage("resource/SpaceDockSplash.png");
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		BufferedImage bg  = null;
+		//Image bg = Toolkit.getDefaultToolkit().createImage("resource/SpaceDockSplash.png");
+		
 	    @Override
 	    public void paintComponent(Graphics g) {
+	    	try {
+	    		bg = ImageIO.read(new File("./resource/SpaceDockSplash.png"));
+	    		//bg = ImageIO.read((this.getClass().getResource("./resource/SpaceDockSplash.png")));
+	    	}
+	    	catch (IOException e)  {
+	    		System.out.println("Background troubles!");
+	    		e.printStackTrace();
+	    	}
+	    	
 	        g.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
 	    }
 	}
