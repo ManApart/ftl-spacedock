@@ -465,8 +465,10 @@ public class SpaceDockUI {
 	    @Override
 	    public void paintComponent(Graphics g) {
 	    	try {
-	    		bg = ImageIO.read(new File("./resource/SpaceDockSplash.png"));
-	    		//bg = ImageIO.read((this.getClass().getResource("./resource/SpaceDockSplash.png")));
+	    		//bg = ImageIO.read(new File("./resource/SpaceDockSplash.png"));
+	    		InputStream in = this.getClass().getResourceAsStream("/resource/SpaceDockSplash.png");
+	    	//getClassLoader().getResourceAsStream(
+	    	bg = ImageIO.read(in);
 	    	}
 	    	catch (IOException e)  {
 	    		System.out.println("Background troubles!");
