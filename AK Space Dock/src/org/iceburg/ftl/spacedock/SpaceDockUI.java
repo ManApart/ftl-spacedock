@@ -22,8 +22,11 @@ import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -49,9 +52,9 @@ import org.apache.logging.log4j.Logger;
 //In order to get pics of each ship, I borrowed a lot of their code in order to interact with their datamanager
 
 //TODO outline:
-//Better understand buffers/caches and implement them
 //clean up code/ organize it better
 //Set background, pack image and make sure works as jar
+//multiple columns based on program width
 //test as jar
 //upload
 
@@ -63,6 +66,7 @@ public class SpaceDockUI {
 	public JButton[] buttonList;
 	public ShipSave currentShip;
 	public File currentFile;
+	private HashMap<String,BufferedImage> imageCache;
 	
 	//currentShip getter and setter
 	public void setCurrentShip( ShipSave ss1) {
@@ -78,7 +82,6 @@ public class SpaceDockUI {
 		File datsPath = null;
 		boolean writeConfig = false;
 		Properties config = new Properties();
-		//TODO private HashMap<String,BufferedImage> imageCache = new HashMap<String,BufferedImage>;
 
 		// Read the config file.
 		InputStream in = null;
@@ -201,60 +204,82 @@ public class SpaceDockUI {
 		File currentFile = 
    				new File(myShips[0].getshipFilePath().getParentFile() + "\\continue.sav");
 		currentShip = ShipSaveParser.findCurrentShip(myShips, currentFile);
+		imageCache = new HashMap<String, BufferedImage>();
 		frmSpaceDock = new JFrame();
 		frmSpaceDock.setTitle("Space Dock");
-		frmSpaceDock.setBounds(100, 100, 450, 300);
+		frmSpaceDock.setBounds(100, 100, 800, 600);
 		frmSpaceDock.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmSpaceDock.setLayout(new GridLayout(0, 1, 0, 0));
+		BgPanel bgPanel = new BgPanel();
+		JPanel subPanel = new JPanel();
 		JPanel mainPanel = new JPanel();
+		subPanel.setLayout(new GridLayout(0, 2, 0, 0));
 		mainPanel.setLayout(new GridLayout(0, 2, 0, 0));
+		subPanel.setOpaque(false);
+		mainPanel.setOpaque(false);
+		
 				
 		ImageIO.setUseCache(false);  // Small images don't need extra buffering.
 		
 		for (int i = 0; i < myShips.length; i++) {			
-		//create panel/ basic data
-		JPanel loopPanel = new JPanel();
-		loopPanel.setLayout(new BoxLayout(loopPanel, BoxLayout.Y_AXIS));
-		//loopPanel.setBackground(Color.gray);
-		JLabel lblShipName = new JLabel(myShips[i].getPlayerShipName());
-		loopPanel.add(lblShipName);
-		JLabel lblExplored = new JLabel(myShips[i].getTotalBeaconsExplored() + " beacons explored.");
-		loopPanel.add(lblExplored);
-		
-		//add the ship's miniship picture
-		
-		ShipBlueprint ship = DataManager.get().getShips()
-				.get(myShips[i].getPlayerShipBlueprintId());
-		BufferedImage baseImage;
-		//baseImage = getResourceImage("img/customizeUI/miniship_"+ ship.getGraphicsBaseName()+ ".png");
-		//TODO - ^will crash if no miniship, for instance on enemy ships. Therefore custom ships must have miniship to work with this program. 
-		//So let's use base image until I can test if miniship exists.
-		baseImage = getResourceImage("img/ship/"+ ship.getGraphicsBaseName() +"_base.png");
-		JLabel lblShipID = new JLabel("", new ImageIcon(baseImage), JLabel.CENTER);
-		//lblShipID.setPreferredSize(new Dimension(200, 140));
-		loopPanel.add(lblShipID);
-		
-		//add the board / dock button
-		if (myShips[i].getshipFilePath().equals(currentFile)) {
-			buttonList[i] =  new JButton("Dock");		
+			//create panel/ basic data
+			JPanel loopPanel = new JPanel();
+			loopPanel.setLayout(new BoxLayout(loopPanel, BoxLayout.Y_AXIS));
+			//loopPanel.setBackground(Color.gray);
+			//loopPanel.setBackground(new Color(0,0,0,100));
+			loopPanel.setOpaque(false);
+			JLabel lblShipName = new JLabel(myShips[i].getPlayerShipName());
+			lblShipName.setForeground(Color.white);
+			loopPanel.add(lblShipName);
+			JLabel lblExplored = new JLabel(myShips[i].getTotalBeaconsExplored() + " beacons explored.");
+			lblExplored.setForeground(Color.white);
+			loopPanel.add(lblExplored);
+			
+			//add the ship's miniship picture
+			//baseImage = getResourceImage("img/customizeUI/miniship_"+ ship.getGraphicsBaseName()+ ".png");
+			//TODO - ^will crash if no miniship, for instance on enemy ships. Therefore custom ships must have miniship to work with this program. 
+			//So let's use base image until I can test if miniship exists.
+			
+			ShipBlueprint ship = DataManager.get().getShips()
+					.get(myShips[i].getPlayerShipBlueprintId());
+			BufferedImage baseImage;
+			if (ship == null) {
+				ship = DataManager.get().getAutoShips()
+						.get(myShips[i].getPlayerShipBlueprintId());
+			}
+			
+			baseImage = getResourceImage("img/ship/"+ ship.getGraphicsBaseName() +"_base.png", true);
+			JLabel lblShipID = new JLabel("", new ImageIcon(baseImage), JLabel.CENTER);
+			//lblShipID.setPreferredSize(new Dimension(200, 140));
+			loopPanel.add(lblShipID);
+			
+			//add the board / dock button
+			if (myShips[i].getshipFilePath().equals(currentFile)) {
+				buttonList[i] =  new JButton("Dock");		
+			}
+			else {
+				buttonList[i] =  new JButton("Board");
+			}
+			//add to a button array so we can use the index to match the button to the ship		
+			loopPanel.add(buttonList[i]);
+			buttonList[i].addActionListener(new BoardListener());
+			
+			
+			
+			loopPanel.add(Box.createRigidArea(new Dimension(25, 10)));
+			//frmSpaceDock.add(loopPanel);
+			subPanel.add(loopPanel);
 		}
-		else {
-			buttonList[i] =  new JButton("Board");
-		}
-		//add to a button array so we can use the index to match the button to the ship		
-		loopPanel.add(buttonList[i]);
-		buttonList[i].addActionListener(new BoardListener());
-		
-		
-		
-		loopPanel.add(Box.createRigidArea(new Dimension(25, 10)));
-		//frmSpaceDock.add(loopPanel);
-		mainPanel.add(loopPanel);
-		}
+		mainPanel.add(subPanel);
 		JScrollPane scrollPanel = new JScrollPane(mainPanel);
 		scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		frmSpaceDock.add(scrollPanel);
+		scrollPanel.setOpaque(false);
+		scrollPanel.getViewport().setOpaque(false);
+		bgPanel.setLayout(new BorderLayout());
+		bgPanel.add(scrollPanel);
+		frmSpaceDock.add(bgPanel);
+		//frmSpaceDock.add(scrollPanel);
 		//frmSpaceDock.pack();
 	}
 	
@@ -274,7 +299,7 @@ public class SpaceDockUI {
 	    	   sourceButton.setText("Dock");
 	          //if they have boarded a ship, dock it before boarding new one; 
 	    	   if  (currentShip != null) {
-	    		   //TODO Find which ship has the file, dock it, and then update it's button
+	    		   //Find which ship has the file, dock it, and then update it's button
 	    		  // System.out.println("Already manning a ship!");
 	    		   parser.dockShip(currentShip);
 	    		   int b = Arrays.asList(myShips).indexOf(currentShip);
@@ -375,44 +400,64 @@ public class SpaceDockUI {
 		return ftlPath;
 	}
 	
-	private BufferedImage getResourceImage(String innerPath) {
+	private BufferedImage getResourceImage(String innerPath, boolean scale) {
 		  // If caching, you can get(innerPath) from a HashMap and return the pre-loaded pic.
-		  InputStream in = null;
-		  BufferedImage result = null;
-		  BufferedImage scaledBI = null;
-		  try {
-		    in = DataManager.get().getResourceInputStream(innerPath);
-		    result = ImageIO.read(in);
-		    if (result.getWidth() > 200) {
+		BufferedImage result = imageCache.get(innerPath);
+		if (result != null)	{ 
+			return result;
+		}	
+		else {
+			InputStream in = null;
+			  try {
+			    in = DataManager.get().getResourceInputStream(innerPath);
+			    result = ImageIO.read(in);
+			   if (scale = true) {
+				   result = scaleImage(result);
+			   }
+			   imageCache.put(innerPath, result);
+			   return result; // If caching, put result in the map before returning.
+			    
+			  }
+			  catch (IOException e) {
+			    log.error( "Failed to load resource image ("+ innerPath +")", e );
+			  }
+			  finally {
+			    try {if (in != null) in.close();}
+			    catch (IOException f) {}
+			  }
+			  return result;
+		}
+	}
+	
+	private BufferedImage scaleImage(BufferedImage image) {		 
+		 BufferedImage scaledBI = null;
+		 if (image.getWidth() > 200 || image.getHeight() > 130) {
 		    	int scaledWidth = 0;
 		    	int scaledHeight = 0;
-		    	if (result.getWidth() > result.getHeight()){
+		    	if (image.getWidth() > image.getHeight()){
 		    		scaledWidth = 191;
-		    		scaledHeight = (result.getHeight()/(result.getWidth()/191));
+		    		scaledHeight = (image.getHeight()/(image.getWidth()/191));
 		    	}
 		    	else {
 		    		scaledHeight = 121;
-		    		scaledWidth = (result.getWidth()/(result.getHeight()/121));
+		    		scaledWidth = (image.getWidth()/(image.getHeight()/121));
 		    	}
 		    	scaledBI = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TRANSLUCENT);
 		    	Graphics2D g = scaledBI.createGraphics();
-		    	g.drawImage(result, 0, 0, scaledWidth, scaledHeight, null); 
+		    	g.drawImage(image, 0, 0, scaledWidth, scaledHeight, null); 
 		    	g.dispose();
+		    	return scaledBI;
 		    }
 		    else {
-		    	return result;
+		    	return image;
 		    }
-		    
-		    return scaledBI;  // If caching, put result in the map before returning.
-		  }
-		  catch (IOException e) {
-		    log.error( "Failed to load resource image ("+ innerPath +")", e );
-		  }
-		  finally {
-		    try {if (in != null) in.close();}
-		    catch (IOException f) {}
-		  }
-		  return result;
-		}
+	}
+	class BgPanel extends JPanel {
+		Image bg = Toolkit.getDefaultToolkit().createImage("resource/SpaceDockSplash.png");
+	    @Override
+	    public void paintComponent(Graphics g) {
+	        g.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
+	    }
+	}
 
 }
