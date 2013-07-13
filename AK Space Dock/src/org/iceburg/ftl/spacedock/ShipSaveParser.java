@@ -100,7 +100,7 @@ public class ShipSaveParser extends Parser{
 		File folder = new File(System.getProperty("user.dir"));
 		File[] fileList = folder.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".sav");
+				return (name.toLowerCase().endsWith(".sav") && !name.contains("prof") );
 			}
 		});
 		

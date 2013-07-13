@@ -460,21 +460,20 @@ public class SpaceDockUI {
 		 */
 		private static final long serialVersionUID = 1L;
 		BufferedImage bg  = null;
+		ImageIcon img = null;
 		//Image bg = Toolkit.getDefaultToolkit().createImage("resource/SpaceDockSplash.png");
 		
 	    @Override
 	    public void paintComponent(Graphics g) {
-	    	try {
-	    		//bg = ImageIO.read(new File("./resource/SpaceDockSplash.png"));
-	    		InputStream in = this.getClass().getResourceAsStream("/resource/SpaceDockSplash.png");
-	    	//getClassLoader().getResourceAsStream(
-	    	bg = ImageIO.read(in);
-	    	}
-	    	catch (IOException e)  {
-	    		System.out.println("Background troubles!");
-	    		e.printStackTrace();
-	    	}
-	    	
+    		//bg = ImageIO.read(new File("./resource/SpaceDockSplash.png")); //this guy worked in eclipse but not in jar
+    		img = new ImageIcon(this.getClass().getResource("resource/SpaceDockSplash.png"));
+    		bg = new BufferedImage(
+    		img.getIconWidth(),
+    		img.getIconHeight(),
+    		BufferedImage.TYPE_INT_RGB);
+    		Graphics gg = bg.createGraphics();
+    		img.paintIcon(null, gg, 0,0);
+    		gg.dispose();
 	        g.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
 	    }
 	}
