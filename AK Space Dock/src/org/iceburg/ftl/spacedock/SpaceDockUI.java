@@ -219,11 +219,9 @@ public class SpaceDockUI {
         mainPanel.setLayout(new GridLayout(0, 2, 0, 0));
         subPanel.setOpaque(false);
         mainPanel.setOpaque(false);
-		
-				
-		ImageIO.setUseCache(false);  // Small images don't need extra buffering.
-		
-		for (int i = 0; i < myShips.length; i++) {			
+        ImageIO.setUseCache(false);  // Small images don't need extra buffering.
+
+        for (int i = 0; i < myShips.length; i++) {			
 			//create panel/ basic data
 			JPanel loopPanel = new JPanel();
 			loopPanel.setLayout(new BoxLayout(loopPanel, BoxLayout.Y_AXIS));
@@ -295,7 +293,7 @@ public class SpaceDockUI {
 			if (sourceButton.getText().equals("Dock")) {
 	    	   sourceButton.setText("Board");	    	   
 	    	   parser.dockShip(myShips[i]);
-	    	   currentShip = myShips[i];
+	    	   currentShip = null; //myShips[i];
 	    	   
 			} else if (sourceButton.getText().equals("Board")) {
 	    	   sourceButton.setText("Dock");

@@ -182,7 +182,7 @@ public class ShipSaveParser extends Parser{
 	public boolean boardShip(ShipSave ss1) {
 		boolean success = false;
 		File oldFile = ss1.getshipFilePath();
-		File newFile = new File("continue.sav");
+		File newFile = new File(ShipSaveParser.save_location, "continue.sav");
 		if (!newFile.exists()) {
 			//success = oldFile.renameTo(newFile);
 			
