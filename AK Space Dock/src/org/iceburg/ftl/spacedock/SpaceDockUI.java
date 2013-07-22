@@ -199,27 +199,26 @@ public class SpaceDockUI {
 	 */
 	private void initialize() {
 		//initializ - get ships/file to display
-		myShips = ShipSaveParser.getShipsList();
-                if (myShips.length > 0)
-                {
-                    buttonList = new JButton[myShips.length];
-                    File currentFile = 
-                                    new File(myShips[0].getshipFilePath().getParentFile() + "\\continue.sav");
-                    currentShip = ShipSaveParser.findCurrentShip(myShips, currentFile);
-                }
-		imageCache = new HashMap<String, BufferedImage>();
-		frmSpaceDock = new JFrame();
-		frmSpaceDock.setTitle("FTL Space Dock");
-		frmSpaceDock.setBounds(100, 100, 850, 600);
-		frmSpaceDock.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmSpaceDock.setLayout(new GridLayout(0, 1, 0, 0));
-		BgPanel bgPanel = new BgPanel();
-		JPanel subPanel = new JPanel();
-		JPanel mainPanel = new JPanel();
-		subPanel.setLayout(new GridLayout(0, 2, 0, 0));
-		mainPanel.setLayout(new GridLayout(0, 2, 0, 0));
-		subPanel.setOpaque(false);
-		mainPanel.setOpaque(false);
+        this.myShips = ShipSaveParser.getShipsList();
+        if (myShips.length > 0)
+        {
+            this.buttonList = new JButton[myShips.length];
+            File currentFile = new File(myShips[0].getshipFilePath().getParentFile(), "continue.sav");
+            this.currentShip = ShipSaveParser.findCurrentShip(myShips, currentFile);
+        }
+        imageCache = new HashMap<String, BufferedImage>();
+        frmSpaceDock = new JFrame();
+        frmSpaceDock.setTitle("FTL Space Dock");
+        frmSpaceDock.setBounds(100, 100, 850, 600);
+        frmSpaceDock.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frmSpaceDock.setLayout(new GridLayout(0, 1, 0, 0));
+        BgPanel bgPanel = new BgPanel();
+        JPanel subPanel = new JPanel();
+        JPanel mainPanel = new JPanel();
+        subPanel.setLayout(new GridLayout(0, 2, 0, 0));
+        mainPanel.setLayout(new GridLayout(0, 2, 0, 0));
+        subPanel.setOpaque(false);
+        mainPanel.setOpaque(false);
 		
 				
 		ImageIO.setUseCache(false);  // Small images don't need extra buffering.
@@ -257,7 +256,7 @@ public class SpaceDockUI {
 			loopPanel.add(lblShipID);
 			
 			//add the board / dock button
-			if (myShips[i].getshipFilePath().equals(currentFile)) {
+			if (myShips[i] == this.currentShip) {
 				buttonList[i] =  new JButton("Dock");		
 			}
 			else {
