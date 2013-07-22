@@ -97,18 +97,14 @@ public class ShipSaveParser extends Parser{
 
 
 	public static ShipSave[] getShipsList() {
-		File folder = new File(System.getProperty("user.dir"));
-                File prof_file = null;
+                File folder = null;
                 for ( File file : ShipSaveParser.getPossibleUserDataLocations("prof.sav") ) {
 			if ( file.exists() ) {
-				prof_file = file;
+				folder = file.getParentFile();
 				break;
 			}
 		}
-                if (prof_file != null)
-                {
-                    folder = prof_file.getParentFile();
-                }
+                
 		File[] fileList = folder.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return (name.toLowerCase().endsWith(".sav") && !name.contains("prof") );
