@@ -27,6 +27,8 @@ import net.blerf.ftl.parser.SavedGameParser.SavedGameState;
 //Used to select save file
 public class ShipSaveParser extends Parser{
 
+    public static File save_location = null;
+                
 	public ShipSave readShipSave(File sav)  {
 		//private static final Logger log = LogManager.getLogger(ShipSaveParser.class);
 		FileInputStream in = null;
@@ -97,15 +99,20 @@ public class ShipSaveParser extends Parser{
 
 
 	public static ShipSave[] getShipsList() {
-                File folder = null;
-                for ( File file : ShipSaveParser.getPossibleUserDataLocations("prof.sav") ) {
-			if ( file.exists() ) {
-				folder = file.getParentFile();
-				break;
-			}
-		}
-                
-		File[] fileList = folder.listFiles(new FilenameFilter() {
+        if (ShipSaveParser.save_location == null)
+        {
+            File folder = null;
+                for ( File file : ShipSaveParser.getPossibleUserDataLocations("prof.sav") ) 
+                {
+                    if ( file.exists() ) 
+                    {
+                        ShipSaveParser.save_location = file.getParentFile();
+                        break;
+                    }
+                }
+        }
+        
+		File[] fileList = ShipSaveParser.save_location.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return (name.toLowerCase().endsWith(".sav") && !name.contains("prof") );
 			}
@@ -149,7 +156,7 @@ public class ShipSaveParser extends Parser{
 		int i = 1;
 		while (oldFile.exists() && i < 10) {
 			fileName = "continue_" + i + ".sav";
-			newFile = new File(fileName);
+			newFile = new File(ShipSaveParser.save_location, fileName);
 			if (!newFile.exists()) {
 				//success = oldFile.renameTo(newFile);
 				
