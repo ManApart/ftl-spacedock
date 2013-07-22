@@ -200,10 +200,13 @@ public class SpaceDockUI {
 	private void initialize() {
 		//initializ - get ships/file to display
 		myShips = ShipSaveParser.getShipsList();
-		buttonList = new JButton[myShips.length];
-		File currentFile = 
-   				new File(myShips[0].getshipFilePath().getParentFile() + "\\continue.sav");
-		currentShip = ShipSaveParser.findCurrentShip(myShips, currentFile);
+                if (myShips.length > 0)
+                {
+                    buttonList = new JButton[myShips.length];
+                    File currentFile = 
+                                    new File(myShips[0].getshipFilePath().getParentFile() + "\\continue.sav");
+                    currentShip = ShipSaveParser.findCurrentShip(myShips, currentFile);
+                }
 		imageCache = new HashMap<String, BufferedImage>();
 		frmSpaceDock = new JFrame();
 		frmSpaceDock.setTitle("FTL Space Dock");
