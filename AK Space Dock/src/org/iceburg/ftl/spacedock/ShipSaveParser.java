@@ -27,6 +27,8 @@ import net.blerf.ftl.parser.SavedGameParser.SavedGameState;
 //Used to select save file
 public class ShipSaveParser extends Parser{
 
+    public static File save_location = null;
+                
 	public ShipSave readShipSave(File sav)  {
 		//private static final Logger log = LogManager.getLogger(ShipSaveParser.class);
 		FileInputStream in = null;
@@ -97,8 +99,20 @@ public class ShipSaveParser extends Parser{
 
 
 	public static ShipSave[] getShipsList() {
-		File folder = new File(System.getProperty("user.dir"));
-		File[] fileList = folder.listFiles(new FilenameFilter() {
+        if (ShipSaveParser.save_location == null)
+        {
+            File folder = null;
+                for ( File file : ShipSaveParser.getPossibleUserDataLocations("prof.sav") ) 
+                {
+                    if ( file.exists() ) 
+                    {
+                        ShipSaveParser.save_location = file.getParentFile();
+                        break;
+                    }
+                }
+        }
+        
+		File[] fileList = ShipSaveParser.save_location.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return (name.toLowerCase().endsWith(".sav") && !name.contains("prof") );
 			}
@@ -113,6 +127,26 @@ public class ShipSaveParser extends Parser{
 		return shipList;
 	}
 	
+	public static File[] getPossibleUserDataLocations( String fileName ) {
+		if ( fileName == null ) fileName = "";
+
+		String xdgDataHome = System.getenv("XDG_DATA_HOME");
+		if (xdgDataHome == null)
+			xdgDataHome = System.getProperty("user.home") +"/.local/share";
+
+		File[] locations = new File[] {
+			// Windows XP
+			new File( System.getProperty("user.home") +"/My Documents/My Games/FasterThanLight/"+ fileName),
+			// Windows Vista/7
+			new File( System.getProperty("user.home") +"/Documents/My Games/FasterThanLight/"+ fileName),
+			// Linux
+			new File( xdgDataHome +"/FasterThanLight/"+ fileName),
+			// OSX
+			new File( System.getProperty("user.home") +"/Library/Application Support/FasterThanLight/"+ fileName)
+		};
+
+		return locations;
+	}
 	
 	public boolean dockShip(ShipSave ss1) {
 		boolean success = false;
@@ -122,7 +156,7 @@ public class ShipSaveParser extends Parser{
 		int i = 1;
 		while (oldFile.exists() && i < 10) {
 			fileName = "continue_" + i + ".sav";
-			newFile = new File(fileName);
+			newFile = new File(ShipSaveParser.save_location, fileName);
 			if (!newFile.exists()) {
 				//success = oldFile.renameTo(newFile);
 				
@@ -148,7 +182,7 @@ public class ShipSaveParser extends Parser{
 	public boolean boardShip(ShipSave ss1) {
 		boolean success = false;
 		File oldFile = ss1.getshipFilePath();
-		File newFile = new File("continue.sav");
+		File newFile = new File(ShipSaveParser.save_location, "continue.sav");
 		if (!newFile.exists()) {
 			//success = oldFile.renameTo(newFile);
 			
